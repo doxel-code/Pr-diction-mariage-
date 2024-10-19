@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Prédiction de Mariage</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            font-family: 'Poppins', sans-serif;
+        }
+        .hidden {
+            display: none;
+        }
+        .celebration-icon {
+            position: absolute;
+            width: 50px;
+            animation: fall 2s linear forwards;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-100px); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        .challenge {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        .challenge:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen relative overflow-hidden">
+    <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center z-10">
+        <h1 class="text-3xl font-bold mb-4 text-gray-800">Jeu de Prédiction de Mariage 💍</h1>
+        
+        <div id="formSection">
+            <p class="mb-4">Entrez votre prénom :</p>
+            <input type="text" id="nameInput" class="border p-2 rounded mb-4 w-full" placeholder="Votre prénom">
+            <select id="genderSelect" class="border p-2 rounded mb-4 w-full">
+                <option value="">Sélectionnez votre sexe</option>
+                <option value="girl">Fille</option>
+                <option value="boy">Garçon</option>
+            </select>
+            <button id="startButton" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Commencer le jeu</button>
+        </div>
+
+        <div id="gameSection" class="hidden">
+            <p class="mb-4">Cliquez sur le bouton ci-dessous pour tirer au sort un partenaire !</p>
+            <button id="drawButton" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Tirer au sort</button>
+            
+            <div id="result" class="hidden mt-4">
+                <h2 class="text-xl font-semibold" id="partnerName"></h2>
+                <p id="message" class="mt-2 text-gray-600"></p>
+                <div id="prediction" class="mt-2 text-gray-600"></div>
+                <button id="nextChallenge" class="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">Prochain défi</button>
+                <p id="thankYouMessage" class="mt-4 hidden text-green-600 font-semibold"></p>
+            </div>
+        </div>
+
+        <footer class="mt-6">
+            <p class="text-gray-500 text-sm">© 2024 dx_code. Tous droits réservés.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script>
+        const girls = [
+            "Ghappy Bilombe", "Noa Katako", "Amélie Mandeba",
+            "Emmanuel Nzila", "Grâce Malasi", "Ruth Ntumba",
+            "Promedi Luwengo", "Grâce Matondo", "Chricha Salambiaku",
+            "Gemima Longo", "Grâce Ngime", "Félicité Kafuamba",
+            "Dorcas Irundu", "Deborah Bola"
+        ];
+
+        const boys = [
+            "Doxel Kanda", "Aaron Tshangu", "Wiverlin Muzingu",
+            "Chriony Mandiangu", "Junior Bakizolele", "Joe Moleki",
+            "Adonaï Balazire", "Edvi Okenge", "Daniel Kalonji",
+            "Braneli Kassa", "Daniel Ubota (Satant)", "Emmanuel Nkula",
+            "Jérome Tabuzike", "Moses Lukula"
+        ];
+
+        const challenges = [
+            "🎨 Dessine ton partenaire : Dessinez votre partenaire en moins de 2 minutes et partagez le résultat dans le groupe.",
+            "🎤 Imité sa voix : Enregistrez-vous en train d'imiter la voix de votre partenaire et envoyez l'audio.",
+            "😂 Souvenir drôle : Racontez un souvenir drôle que vous avez avec votre partenaire et partagez-le dans le groupe.",
+            "💬 Compliment : Envoyez un compliment sincère à votre partenaire et partagez-le dans le groupe.",
+            "📸 Selfie avec un filtre : Prenez un selfie avec un filtre drôle et partagez-le dans le groupe.",
+            "📝 Statut WhatsApp : Postez une photo ou un message drôle sur votre partenaire en statut WhatsApp pendant 24 heures.",
+            "📚 Histoire en emojis : Racontez votre histoire en utilisant uniquement des emojis et faites deviner l'histoire."
+        ];
+
+        const countries = [
+            "Afghanistan", "Albanie", "Algérie", "Andorre", "Angola", "Antigua-et-Barbuda",
+            "Argentine", "Arménie", "Australie", "Autriche", "Azerbaïdjan", "Bahamas",
+            "Bahreïn", "Bangladesh", "Barbade", "Bélarus", "Belgique", "Belize",
+            "Bénin", "Bhoutan", "Bolivie", "Bosnie-Herzégovine", "Botswana", "Brésil",
+            "Brunei", "Bulgarie", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodge",
+            "Cameroun", "Canada", "Centrafrique", "Chili", "Chine", "Chypre",
+            "Colombie", "Comores", "Congo", "Congo (RDC)", "Costa Rica", "Croatie",
+            "Cuba", "Danemark", "Djibouti", "Dominique", "Égypte", "Émirats Arabes Unis",
+            "Équateur", "Érythrée", "Espagne", "Estonie", "Eswatini", "États-Unis",
+            "Fidji", "Filipines", "Finlande", "France", "Gabon", "Gambie",
+            "Géorgie", "Ghana", "Grèce", "Grenade", "Guatemala", "Guinée",
+            "Guinée-Bissau", "Guinée équatoriale", "Guyana", "Haïti", "Honduras",
+            "Hongrie", "Inde", "Indonésie", "Irak", "Iran", "Irlande",
+            "Islande", "Israël", "Italie", "Jamaïque", "Japon", "Jordanie",
+            "Kazakhstan", "Kenya", "Kirghizistan", "Kiribati", "Koweït", "Laos",
+            "Lesotho", "Lettonie", "Liban", "Liberia", "Libye", "Lituanie",
+            "Luxembourg", "Madagascar", "Malaisie", "Malawi", "Maldives", "Mali",
+            "Malte", "Maroc", "Maurice", "Mauritanie", "Mexique", "Micronésie",
+            "Moldavie", "Monaco", "Mongolie", "Mozambique", "Namibie", "Nauru",
+            "Népal", "Nicaragua", "Niger", "Nigéria", "Norvège", "Nouvelle-Zélande",
+            "Oman", "Pakistan", "Palaos", "Panama", "Papouasie-Nouvelle-Guinée",
+            "Paraguay", "Pays-Bas", "Philippines", "Pologne", "Portugal", "Qatar",
+            "Roumanie", "Royaume-Uni", "Russie", "Rwanda", "Saint-Kitts-et-Nevis",
+            "Saint-Vincent-et-les-Grenadines", "Sao Tomé-et-Principe", "Sénégal",
+            "Serbie", "Seychelles", "Sierra Leone", "Singapour", "Slovaquie",
+            "Slovénie", "Somalie", "Soudan", "Soudan du Sud", "Sri Lanka",
+            "Suède", "Suisse", "Syrie", "Tadjikistan", "Tanzanie", "Tchad",
+            "Tchéquie", "Thaïlande", "Timor oriental", "Togo", "Tonga",
+            "Trinité-et-Tobago", "Tunisie", "Turkménistan", "Turquie", "Tuvalu",
+            "Ukraine", "Uganda", "Uruguay", "Vanuatu", "Vatican", "Venezuela",
+            "Vietnam", "Yémen", "Zambie", "Zimbabwe"
+        ];
+
+        let usedChallenges = [];
+
+        function getUniqueChallenge() {
+            if (usedChallenges.length === challenges.length) {
+                document.getElementById('thankYouMessage').innerText = "Merci d'avoir participé au jeu ! 🎉";
+                document.getElementById('thankYouMessage').classList.remove('hidden');
+                document.getElementById('nextChallenge').classList.add('hidden');
+                return null;
+            }
+            let challenge;
+            do {
+                challenge = challenges[Math.floor(Math.random() * challenges.length)];
+            } while (usedChallenges.includes(challenge));
+            usedChallenges.push(challenge);
+            return challenge;
+        }
+
+        let hasDrawn = false;
+
+        document.getElementById('startButton').addEventListener('click', function() {
+            const name = document.getElementById('nameInput').value;
+            const gender = document.getElementById('genderSelect').value;
+
+            if (!name || !gender) {
+                alert('Veuillez remplir votre prénom et sélectionner votre sexe.');
+                return;
+            }
+
+            document.getElementById('formSection').classList.add('hidden');
+            document.getElementById('gameSection').classList.remove('hidden');
+            document.getElementById('partnerName').innerText = '';
+            document.getElementById('message').innerText = '';
+            document.getElementById('prediction').innerText = '';
+            document.getElementById('result').classList.add('hidden');
+            hasDrawn = false;
+            usedChallenges = [];
+            document.getElementById('thankYouMessage').classList.add('hidden');
+        });
+
+        document.getElementById('drawButton').addEventListener('click', function() {
+            if (hasDrawn) {
+                alert("Vous avez déjà tiré au sort un partenaire !");
+                return;
+            }
+
+            const gender = document.getElementById('genderSelect').value;
+            const partner = gender === 'girl' 
+                ? boys[Math.floor(Math.random() * boys.length)] 
+                : girls[Math.floor(Math.random() * girls.length)];
+
+            const numberOfChildren = Math.floor(Math.random() * 20) + 1; // 1 à 20 enfants
+            const city = countries[Math.floor(Math.random() * countries.length)];
+
+            document.getElementById('partnerName').innerText = partner;
+            document.getElementById('message').innerText = `Vous allez vous marier à ${partner} ! 🎉`;
+            document.getElementById('prediction').innerText = `Vous aurez ${numberOfChildren} enfant(s) et vivrez à ${city}.`;
+            document.getElementById('result').classList.remove('hidden');
+            hasDrawn = true;
+
+            // Démarrer les animations
+            createCelebrationIcons();
+        });
+
+        document.getElementById('nextChallenge').addEventListener('click', function() {
+            const challenge = getUniqueChallenge();
+            if (challenge) {
+                const challengeDiv = document.createElement('div');
+                challengeDiv.classList.add('challenge');
+                challengeDiv.innerText = challenge;
+                document.getElementById('prediction').appendChild(challengeDiv);
+            }
+        });
+
+        function createCelebrationIcons() {
+            const iconCount = 10; // Nombre d'icônes de célébration
+            for (let i = 0; i < iconCount; i++) {
+                const icon = document.createElement('i');
+                icon.classList.add('celebration-icon', 'fas', 'fa-confetti-ball'); // Utilisation d'une icône FontAwesome
+                icon.style.left = Math.random() * 100 + 'vw';
+                icon.style.animationDuration = Math.random() * 2 + 2 + 's'; // Durée aléatoire
+                document.body.appendChild(icon);
+                gsap.fromTo(icon, { y: -100, opacity: 1 }, { y: window.innerHeight, opacity: 0, duration: 2, onComplete: () => icon.remove() });
+            }
+        }
+    </script>
+</body>
+  </html>
+                  
