@@ -66,6 +66,12 @@
             </div>
         </div>
 
+        <div id="challengeSection" class="hidden">
+            <div id="challengeContent" class="mt-4"></div>
+            <button id="prevChallenge" class="hidden bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Défi Précédent</button>
+            <button id="nextChallengeBtn" class="hidden bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">Défi Suivant</button>
+        </div>
+
         <footer class="mt-6">
             <p class="text-gray-500 text-sm">© 2024 dx_code. Tous droits réservés.</p>
         </footer>
@@ -134,12 +140,14 @@
         ];
 
         let usedChallenges = [];
+        let currentChallengeIndex = -1; // Index actuel du défi
 
         function getUniqueChallenge() {
             if (usedChallenges.length === challenges.length) {
                 document.getElementById('thankYouMessage').innerText = "Merci d'avoir participé au jeu ! 🎉";
                 document.getElementById('thankYouMessage').classList.remove('hidden');
-                document.getElementById('nextChallenge').classList.add('hidden');
+                document.getElementById('nextChallengeBtn').classList.add('hidden');
+                document.getElementById('prevChallenge').classList.add('hidden');
                 return null;
             }
             let challenge;
@@ -169,7 +177,9 @@
             document.getElementById('result').classList.add('hidden');
             hasDrawn = false;
             usedChallenges = [];
+            currentChallengeIndex = -1;  // Réinitialiser l'index des défis
             document.getElementById('thankYouMessage').classList.add('hidden');
+            document.getElementById('challengeSection').classList.add('hidden');
         });
 
         document.getElementById('drawButton').addEventListener('click', function() {
@@ -186,25 +196,60 @@
             const numberOfChildren = Math.floor(Math.random() * 20) + 1; // 1 à 20 enfants
             const city = countries[Math.floor(Math.random() * countries.length)];
 
+            // Animation pour le nom du partenaire
+            const partnerNameElement = document.getElementById('partnerName');
+            gsap.fromTo(partnerNameElement, { opacity: 0, y: -50 }, { opacity: 1, y: 0, duration: 1 });
+
+            // Animation pour le message
+            const messageElement = document.getElementById('message');
+            gsap.fromTo(messageElement, { opacity: 0, y: -50 }, { opacity: 1, y: 0, duration: 1, delay: 0.5 });
+
+            // Animation pour la prédiction
+            const predictionElement = document.getElementById('prediction');
+            gsap.fromTo(predictionElement, { opacity: 0, y: -50 }, { opacity: 1, y: 0, duration: 1, delay: 1 });
+
             document.getElementById('partnerName').innerText = partner;
             document.getElementById('message').innerText = `Vous allez vous marier à ${partner} ! 🎉`;
             document.getElementById('prediction').innerText = `Vous aurez ${numberOfChildren} enfant(s) et vivrez à ${city}.`;
             document.getElementById('result').classList.remove('hidden');
             hasDrawn = true;
 
-            // Démarrer les animations
+            // Démarrer les animations de célébration
             createCelebrationIcons();
+            document.getElementById('challengeSection').classList.remove('hidden');
+            showNextChallenge();
         });
 
-        document.getElementById('nextChallenge').addEventListener('click', function() {
-            const challenge = getUniqueChallenge();
-            if (challenge) {
-                const challengeDiv = document.createElement('div');
-                challengeDiv.classList.add('challenge');
-                challengeDiv.innerText = challenge;
-                document.getElementById('prediction').appendChild(challengeDiv);
-            }
+        document.getElementById('nextChallengeBtn').addEventListener('click', function() {
+            showNextChallenge();
         });
+
+        document.getElementById('prevChallenge').addEventListener('click', function() {
+            showPrevChallenge();
+        });
+
+        function showNextChallenge() {
+            if (currentChallengeIndex < challenges.length - 1) {
+                currentChallengeIndex++;
+                const challengeText = challenges[currentChallengeIndex];
+                document.getElementById('challengeContent').innerText = challengeText;
+                updateChallengeButtons();
+            }
+        }
+
+        function showPrevChallenge() {
+            if (currentChallengeIndex > 0) {
+                currentChallengeIndex--;
+                const challengeText = challenges[currentChallengeIndex];
+                document.getElementById('challengeContent').innerText = challengeText;
+                updateChallengeButtons();
+            }
+        }
+
+        function updateChallengeButtons() {
+            document.getElementById('prevChallenge').classList.toggle('hidden', currentChallengeIndex === 0);
+            document.getElementById('nextChallengeBtn').classList.toggle('hidden', currentChallengeIndex === challenges.length - 1);
+        }
 
         function createCelebrationIcons() {
             const iconCount = 10; // Nombre d'icônes de célébration
@@ -214,10 +259,11 @@
                 icon.style.left = Math.random() * 100 + 'vw';
                 icon.style.animationDuration = Math.random() * 2 + 2 + 's'; // Durée aléatoire
                 document.body.appendChild(icon);
-                gsap.fromTo(icon, { y: -100, opacity: 1 }, { y: window.innerHeight, opacity: 0, duration: 2, onComplete: () => icon.remove() });
+                
+                // Animation de rebond
+                gsap.fromTo(icon, { y: -100, opacity: 1 }, { y: window.innerHeight, opacity: 0, duration: 2, ease: "bounce.out", onComplete: () => icon.remove() });
             }
         }
     </script>
 </body>
-  </html>
-                  
+</html>
